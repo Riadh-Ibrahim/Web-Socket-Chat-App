@@ -1,6 +1,6 @@
 # ChatConnect
 
-ChatConnect is a real-time chat application built with Socket.io, Node.js, and Vanilla JavaScript. It allows users to join a chatroom, send and receive messages instantly, and get notifications whenever a user joins or leaves the chat. The application features a clean and simple interface that is fully responsive, making it accessible on both desktop and mobile devices. 
+ChatConnect is a real-time chat application built with Socket.io, NestJS and Vanilla JavaScript. It allows users to join a chatroom, send and receive messages instantly, and get notifications whenever a user joins or leaves the chat. The application features a clean and simple interface that is fully responsive, making it accessible on both desktop and mobile devices. 
 
 This project is designed to demonstrate the power of Socket.io in building scalable real-time applications with minimal effort. The easy-to-understand setup allows developers to quickly implement real-time communication in their own projects. You can customize the app's design to fit your own needs, whether for a chatroom, customer support tool, or real-time collaborative platform.
 
