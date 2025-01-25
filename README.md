@@ -12,4 +12,3 @@ This project is designed to demonstrate the power of Socket.io in building scala
 - **Simple and Intuitive Interface**: A user-friendly interface that requires no special setup or configuration.
 - **Socket.io Integration**: Uses Socket.io for WebSocket-based communication to handle real-time updates efficiently.
 - **Customizable**: Easily change the look and feel of the application with a few tweaks in the CSS, making it suitable for different use cases.
-  ![image](https://github.com/user-attachments/assets/973d759a-aae7-4e9d-9883-4a4b558be7fa)
