@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Socket.io Chatroom</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      background: #f4f4f4;
+      transition: background-color 0.3s ease;
+    }
+    .chat-container {
+      width: 80%;
+      max-width: 600px;
+      background: #fff;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    h1 {
+      text-align: center;
+      background: #4caf50;
+      color: white;
+      padding: 15px 0;
+      margin: 0;
+      font-size: 24px;
+    }
+
+    body.dark-mode {
+      background-color: #2c2c2c;
+    }
+    body.dark-mode .chat-container {
+      background: #333;
+    }
+    body.dark-mode h1 {
+      background: #333;
+      color: #fff;
+    }
+    body.dark-mode #messages li {
+      background: #444;
+      color: #fff;
+    }
+    body.dark-mode #sendButton {
+      background-color: #555;
+    }
+    body.dark-mode #sendButton:hover {
+      background-color: #666;
+    }
+
+    #messages {
+      list-style-type: none;
+      margin: 0;
+      padding: 0;
+      height: 400px;
+      overflow-y: scroll;
+      padding-right: 10px;
+      scroll-behavior: smooth;
+    }
+    #messages li {
+      padding: 8px 12px;
+      border-bottom: 1px solid #ddd;
+      opacity: 0;
+      animation: fadeIn 0.5s forwards;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    #messages li .username {
+      font-weight: bold;
+      color: #4caf50;
+    }
+    #messages li .message {
+      margin-left: 10px;
+    }
+    #messages li .timestamp {
+      font-size: 0.8em;
+      color: #888;
+      margin-left: 10px;
+    }
+    .joined {
+      color: #28a745;
+    }
+    .left {
+      color: #e74c3c;
+    }
+
+    .avatar {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background-color: #4caf50;
+      display: inline-block;
+      text-align: center;
+      line-height: 30px;
+      color: white;
+      margin-right: 10px;
+    }
+
+    #messageInput {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      box-sizing: border-box;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+    #sendButton {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      background-color: #4caf50;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+    #sendButton:hover {
+      background-color: #45a049;
+    }
+
+    #typingIndicator {
+      font-size: 0.9em;
+      color: #888;
+      margin-top: 5px;
+    }
+
+    #themeToggle {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: #4caf50;
+      color: white;
+      border: none;
+      padding: 10px;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+
+    #themeToggle:hover {
+      background: #45a049;
+    }
+
+    #fileInput {
+      margin-top: 10px;
+      padding: 8px;
+      background-color: #f1f1f1;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+
+    .message-reactions {
+      display: flex;
+      justify-content: space-around;
+      width: 100px;
+      margin-top: 5px;
+    }
+
+    .reaction {
+      cursor: pointer;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <button id="themeToggle">Toggle Dark Mode</button>
+  <div class="chat-container">
+    <h1>ChatConnect</h1>
+    <ul id="messages"></ul>
+    <input type="text" id="messageInput" placeholder="Type your message" />
+    <input type="file" id="fileInput" />
+    <button id="sendButton">Send</button>
+    <div id="typingIndicator" style="display: none;">Someone is typing...</div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.3.1/socket.io.js"></script>
+  <script>
+    const socket = io("http://localhost:3002");
+
+    const messageInput = document.getElementById("messageInput");
+    const sendButton = document.getElementById("sendButton");
+    const fileInput = document.getElementById("fileInput");
+    const messagesList = document.getElementById("messages");
+    const typingIndicator = document.getElementById("typingIndicator");
+    const themeToggle = document.getElementById("themeToggle");
+
+    let isUserTyping = false;
+
+    // Function to add a new message to the chat UI
+    function addMessage(message, className = "") {
+      const li = document.createElement("li");
+
+      const avatar = document.createElement("div");
+      avatar.classList.add("avatar");
+      avatar.textContent = message.username[0].toUpperCase();
+
+      const usernameSpan = document.createElement("span");
+      usernameSpan.classList.add("username");
+      const messageSpan = document.createElement("span");
+      messageSpan.classList.add("message");
+
+      const timestampSpan = document.createElement("span");
+      timestampSpan.classList.add("timestamp");
+      timestampSpan.textContent = new Date().toLocaleTimeString();
+
+      const messageReactions = document.createElement("div");
+      messageReactions.classList.add("message-reactions");
+
+      // Add Emoji Reactions
+      const thumbsUp = document.createElement("span");
+      thumbsUp.classList.add("reaction");
+      thumbsUp.textContent = "👍";
+      const heart = document.createElement("span");
+      heart.classList.add("reaction");
+      heart.textContent = "❤️";
+      
+      messageReactions.appendChild(thumbsUp);
+      messageReactions.appendChild(heart);
+
+      usernameSpan.textContent = message.username;
+      messageSpan.textContent = message.message;
+
+      li.appendChild(avatar);
+      li.appendChild(usernameSpan);
+      li.appendChild(messageSpan);
+      li.appendChild(timestampSpan);
+      li.appendChild(messageReactions);
+
+      if (className) {
+        li.classList.add(className);
+      }
+
+      messagesList.appendChild(li);
+      messagesList.scrollTop = messagesList.scrollHeight;
+    }
+
+    // Send message with file
+    function sendMessage() {
+      const message = messageInput.value.trim();
+      if (message !== "") {
+        socket.emit("newMessage", { message, username: socket.id });
+        messageInput.value = "";
+      }
+      if (fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        socket.emit("newFile", { file, username: socket.id });
+        fileInput.value = "";
+      }
+    }
+
+    // Listen for new messages from the server
+    socket.on("message", (data) => {
+      addMessage(data);
+    });
+
+    socket.on("typing", (data) => {
+      typingIndicator.style.display = data.isTyping ? "block" : "none";
+    });
+
+    socket.on("user-joined", (data) => {
+      addMessage({ username: "System", message: data.message }, "joined");
+    });
+
+    socket.on("user-left", (data) => {
+      addMessage({ username: "System", message: data.message }, "left");
+    });
+
+    socket.on("file", (data) => {
+      const li = document.createElement("li");
+      li.innerHTML = `${data.username} sent a file: <a href="${data.file}" target="_blank">View File</a>`;
+      messagesList.appendChild(li);
+    });
+
+    // Allow sending messages by pressing Enter
+    messageInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter" && messageInput.value.trim() !== "") {
+        sendMessage();
+      }
+      if (e.target.value.length > 0) {
+        if (!isUserTyping) {
+          socket.emit("typing", { isTyping: true });
+          isUserTyping = true;
+        }
+      } else {
+        if (isUserTyping) {
+          socket.emit("typing", { isTyping: false });
+          isUserTyping = false;
+        }
+      }
+    });
+
+    sendButton.addEventListener("click", sendMessage);
+
+    // Theme toggle
+    themeToggle.addEventListener("click", () => {
+      document.body.classList.toggle("dark-mode");
+    });
+  </script>
+</body>
+</html>
