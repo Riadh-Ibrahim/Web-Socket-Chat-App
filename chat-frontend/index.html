@@ -199,7 +199,6 @@
 
     let isUserTyping = false;
 
-    // Function to add a new message to the chat UI
     function addMessage(message, className = "") {
       const li = document.createElement("li");
 
@@ -219,7 +218,6 @@
       const messageReactions = document.createElement("div");
       messageReactions.classList.add("message-reactions");
 
-      // Add Emoji Reactions
       const thumbsUp = document.createElement("span");
       thumbsUp.classList.add("reaction");
       thumbsUp.textContent = "👍";
@@ -247,7 +245,6 @@
       messagesList.scrollTop = messagesList.scrollHeight;
     }
 
-    // Send message with file
     function sendMessage() {
       const message = messageInput.value.trim();
       if (message !== "") {
@@ -261,7 +258,6 @@
       }
     }
 
-    // Listen for new messages from the server
     socket.on("message", (data) => {
       addMessage(data);
     });
@@ -284,7 +280,6 @@
       messagesList.appendChild(li);
     });
 
-    // Allow sending messages by pressing Enter
     messageInput.addEventListener("keypress", (e) => {
       if (e.key === "Enter" && messageInput.value.trim() !== "") {
         sendMessage();
@@ -304,7 +299,6 @@
 
     sendButton.addEventListener("click", sendMessage);
 
-    // Theme toggle
     themeToggle.addEventListener("click", () => {
       document.body.classList.toggle("dark-mode");
     });
